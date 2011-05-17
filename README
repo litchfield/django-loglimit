@@ -1,0 +1,44 @@
+Limit duplicate Django errors to come every X seconds.
+
+Easy way to slow down those error emails, or make it part of your more
+sophisticated error handling chain.
+
+Automagically falls back to using local memory if it can't find cache or 
+if the cache is broken. Yep, this has been battle tested.
+
+Add something like this to your settings --
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+            'filters': ['loglimit'],
+        }
+    },
+    'filters': {
+        'loglimit': {
+            '()': 'loglimit.LogLimitFilter',
+        }
+    },
+    'loggers': {
+        'django.request':{
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+    },
+}
+
+Note this example setting adds the filter to the standard AdminEmailHandler,
+but you can mix it in with whatever error handlers you like.
+
+Optional settings --
+
+# Send a duplicate error once every X seconds at most
+LOGLIMIT_RATE = 60
+
+# How many different tracebacks to keep in cache
+LOGLIMIT_MAX_KEYS = 100
